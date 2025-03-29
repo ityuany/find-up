@@ -1,15 +1,15 @@
 [package]
-authors = ["ityuany <519495771@qq.com>"]
-categories = ["filesystem"]
-description = "Find files or directories upward in the directory tree."
+authors       = ["ityuany <519495771@qq.com>"]
+categories    = ["filesystem"]
+description   = "Find files or directories upward in the directory tree."
 documentation = "https://docs.rs/find_up"
-edition = "2024"
-include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md"]
-homepage = "https://github.com/ityuany/find-up"
-keywords = ["find", "search", "find_up"]
-license = "MIT"
-name = "find_up"
-repository = "https://github.com/ityuany/find-up"
-version = "0.0.1"
+edition       = "2024"
+homepage      = "https://github.com/ityuany/find_up"
+include       = ["src/**/*", "Cargo.toml", "LICENSE", "README.md"]
+keywords      = ["find", "search", "find_up"]
+license       = "MIT"
+name          = "find_up"
+repository    = "https://github.com/ityuany/find_up"
+version       = "0.0.1"
 
 [dependencies]
