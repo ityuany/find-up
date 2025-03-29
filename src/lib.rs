@@ -20,6 +20,7 @@ pub enum FindUpResult {
 ///
 /// ```rust
 /// use find_up::FindUp;
+/// use find_up::FindUpKind;
 ///
 /// let find_up = FindUp::new(".", FindUpKind::File);
 /// let paths = find_up.find_up(&["package.json"]);
@@ -29,6 +30,7 @@ pub enum FindUpResult {
 ///
 /// ```rust
 /// use find_up::FindUp;
+/// use find_up::FindUpKind;
 ///
 /// let find_up = FindUp::new(".", FindUpKind::Dir);
 /// let paths = find_up.find_up(&["a"]);
@@ -49,6 +51,7 @@ impl<P: AsRef<Path>> FindUp<P> {
   ///
   /// ```rust
   /// use find_up::FindUp;
+  /// use find_up::FindUpKind;
   ///
   /// let find_up = FindUp::new(".", FindUpKind::File);
   /// let paths = find_up.find_up(&["package.json"]);
