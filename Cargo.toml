@@ -8,7 +8,7 @@ include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md"]
 homepage = "https://github.com/ityuany/find-up"
 keywords = ["find", "search", "find-up"]
 license = "MIT"
-name = "find-up"
+name = "find_up"
 repository = "https://github.com/ityuany/find-up"
 version = "0.0.1"
 
