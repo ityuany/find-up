@@ -1,6 +1,6 @@
 [package]
 authors       = ["ityuany <519495771@qq.com>"]
-categories    = ["filesystem", "search"]
+categories    = ["filesystem"]
 description   = "Find files or directories upward in the directory tree."
 documentation = "https://docs.rs/find_up"
 edition       = "2024"
