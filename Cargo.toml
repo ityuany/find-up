@@ -5,6 +5,7 @@ description = "Find files or directories upward in the directory tree."
 documentation = "https://docs.rs/find_up"
 edition = "2024"
 include = ["src/**/*", "Cargo.toml", "LICENSE", "README.md"]
+exclude = ["Cargo.lock", ".cargo_vcs_info.json", "*.orig"]
 homepage = "https://github.com/ityuany/find-up"
 keywords = ["find", "search", "find-up"]
 license = "MIT"
