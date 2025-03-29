@@ -1,0 +1,15 @@
+[package]
+authors       = ["ityuany <519495771@qq.com>"]
+categories    = ["filesystem", "search"]
+description   = "Find files or directories upward in the directory tree."
+documentation = "https://docs.rs/find_up"
+edition       = "2024"
+exclude       = ["fixtures", "rust-toolchain.toml"]
+homepage      = "https://github.com/ityuany/find-up"
+keywords      = ["find", "up", "directory", "file", "search", "find-up"]
+license       = "MIT"
+name          = "find-up"
+repository    = "https://github.com/ityuany/find-up"
+version       = "0.0.1"
+
+[dependencies]
