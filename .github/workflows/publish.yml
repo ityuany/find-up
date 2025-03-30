@@ -1,6 +1,8 @@
 name: Publish to crates.io
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+permissions:
+  contents: write
 
 on:
   push:
