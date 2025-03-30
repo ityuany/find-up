@@ -13,3 +13,4 @@ repository    = "https://github.com/ityuany/find_up"
 version       = "0.0.1"
 
 [dependencies]
+rustc-hash = { version = "2.1.1" }

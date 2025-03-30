@@ -1,7 +1,6 @@
-use std::{
-  collections::HashMap,
-  path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
+
+use rustc_hash::FxHashMap;
 
 pub enum FindUpKind {
   File,
@@ -14,106 +13,88 @@ pub enum FindUpResult {
   Stop,
 }
 
-/// FindUp is a utility for finding files or directories upward in the directory tree.
-///
-/// # Example
-///
-/// ```rust
-/// use find_up::FindUp;
-/// use find_up::FindUpKind;
-///
-/// let find_up = FindUp::new(".", FindUpKind::File);
-/// let paths = find_up.find_up(&["package.json"]);
-/// ```
-///
-/// # Example
-///
-/// ```rust
-/// use find_up::FindUp;
-/// use find_up::FindUpKind;
-///
-/// let find_up = FindUp::new(".", FindUpKind::Dir);
-/// let paths = find_up.find_up(&["a"]);
-/// ```
-pub struct FindUp<P: AsRef<Path>> {
+pub struct FindUpOptions<P: AsRef<Path>> {
   pub cwd: P,
   pub kind: FindUpKind,
 }
 
-impl<P: AsRef<Path>> FindUp<P> {
-  pub fn new(cwd: P, kind: FindUpKind) -> Self {
-    Self { cwd, kind }
-  }
-
-  /// Find files or directories upward in the directory tree.
-  ///
-  /// # Example
-  ///
-  /// ```rust
-  /// use find_up::FindUp;
-  /// use find_up::FindUpKind;
-  ///
-  /// let find_up = FindUp::new(".", FindUpKind::File);
-  /// let paths = find_up.find_up(&["package.json"]);
-  /// ```
-  pub fn find_up(&self, names: &[&str]) -> HashMap<String, Vec<PathBuf>> {
-    self.find_up_with(names, move |p| {
+pub fn find_up<P: AsRef<Path>>(
+  names: &[&str],
+  options: FindUpOptions<P>,
+) -> FxHashMap<String, Vec<PathBuf>> {
+  find_up_with(
+    options.cwd.as_ref().to_path_buf(),
+    names,
+    move |p, kind| {
       if !p.exists() {
         return FindUpResult::Continue;
       }
 
-      let file_matched = matches!(self.kind, FindUpKind::File) && p.is_file();
-      let dir_matched = matches!(self.kind, FindUpKind::Dir) && p.is_dir();
+      let file_matched = matches!(kind, FindUpKind::File) && p.is_file();
+      let dir_matched = matches!(kind, FindUpKind::Dir) && p.is_dir();
 
       if !(file_matched || dir_matched) {
         return FindUpResult::Continue;
       }
 
       FindUpResult::Found(p.to_path_buf())
-    })
-  }
+    },
+    options.kind,
+  )
+}
 
-  fn find_up_with<F>(&self, names: &[&str], f: F) -> HashMap<String, Vec<PathBuf>>
-  where
-    F: Fn(&PathBuf) -> FindUpResult,
-  {
-    let mut paths = HashMap::new();
+fn find_up_with<F>(
+  cwd: PathBuf,
+  names: &[&str],
+  f: F,
+  find_kind: FindUpKind,
+) -> FxHashMap<String, Vec<PathBuf>>
+where
+  F: Fn(&PathBuf, &FindUpKind) -> FindUpResult,
+{
+  let mut paths: FxHashMap<String, Vec<PathBuf>> = FxHashMap::default();
 
-    let mut cwd = self.cwd.as_ref();
+  let mut cwd = cwd;
 
-    self.scan_directory(cwd, names, &mut paths, &f);
+  for name in names {
+    let vecs = paths.entry(name.to_string()).or_default();
 
-    while let Some(parent) = cwd.parent() {
-      self.scan_directory(parent, names, &mut paths, &f);
-      cwd = parent;
+    let file = cwd.join(name);
+
+    match f(&file, &find_kind) {
+      FindUpResult::Found(path_buf) => {
+        vecs.push(path_buf);
+      }
+      FindUpResult::Continue => {
+        continue;
+      }
+      FindUpResult::Stop => {}
     }
-
-    paths
   }
 
-  fn scan_directory<F>(
-    &self,
-    cwd: &Path,
-    names: &[&str],
-    paths: &mut HashMap<String, Vec<PathBuf>>,
-    f: &F,
-  ) where
-    F: Fn(&PathBuf) -> FindUpResult,
-  {
+  while let Some(parent) = cwd.parent() {
+    cwd = parent.to_path_buf();
+
     for name in names {
       let vecs = paths.entry(name.to_string()).or_default();
+
       let file = cwd.join(name);
-      match f(&file) {
+
+      match f(&file, &find_kind) {
         FindUpResult::Found(path_buf) => {
           vecs.push(path_buf);
         }
-        FindUpResult::Continue => {}
+        FindUpResult::Continue => {
+          continue;
+        }
         FindUpResult::Stop => {
           break;
         }
       }
     }
   }
+
+  paths
 }
 
 #[cfg(test)]
@@ -125,8 +106,13 @@ mod tests {
     let package_json_name = "package.json";
     let node_version_name = ".node-version";
 
-    let find_up = FindUp::new("fixtures/a/b/c/d", FindUpKind::File);
-    let paths = find_up.find_up(&[package_json_name, node_version_name]);
+    let paths = find_up(
+      &[package_json_name, node_version_name],
+      FindUpOptions {
+        cwd: "fixtures/a/b/c/d",
+        kind: FindUpKind::File,
+      },
+    );
 
     println!("{:#?}", paths);
 
@@ -146,8 +132,13 @@ mod tests {
     let package_json_name = "package.json";
     let node_version_name = ".node-version";
 
-    let find_up = FindUp::new("fixtures/a/b/c/d", FindUpKind::Dir);
-    let paths = find_up.find_up(&[package_json_name, node_version_name]);
+    let paths = find_up(
+      &[package_json_name, node_version_name],
+      FindUpOptions {
+        cwd: "fixtures/a/b/c/d",
+        kind: FindUpKind::Dir,
+      },
+    );
 
     println!("{:#?}", paths);
 
@@ -166,8 +157,13 @@ mod tests {
   fn should_find_directory_in_parent_path() {
     let dir_name = "a";
 
-    let find_up = FindUp::new("fixtures/a/b/c/d", FindUpKind::Dir);
-    let paths = find_up.find_up(&[dir_name]);
+    let paths = find_up(
+      &[dir_name],
+      FindUpOptions {
+        cwd: "fixtures/a/b/c/d",
+        kind: FindUpKind::Dir,
+      },
+    );
 
     println!("{:#?}", paths);
 
