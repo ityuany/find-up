@@ -1,7 +1,8 @@
-use std::path::{Path, PathBuf};
-
 use rustc_hash::FxHashMap;
+use std::path::{Path, PathBuf};
+use typed_builder::TypedBuilder;
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum FindUpKind {
   File,
   Dir,
@@ -13,8 +14,10 @@ pub enum FindUpResult {
   Stop,
 }
 
+#[derive(Debug, PartialEq, TypedBuilder)]
 pub struct FindUpOptions<P: AsRef<Path>> {
   pub cwd: P,
+  #[builder(default = FindUpKind::File)]
   pub kind: FindUpKind,
 }
 
@@ -25,7 +28,9 @@ pub struct FindUpOptions<P: AsRef<Path>> {
 /// ```rust
 /// use find_up::{find_up, FindUpOptions, FindUpKind};
 ///
-/// let paths = find_up("package.json", FindUpOptions { cwd: ".", kind: FindUpKind::File });
+/// let opts = FindUpOptions::builder().cwd(".").kind(FindUpKind::File).build();
+///
+/// let paths = find_up("package.json", opts);
 ///
 /// ```
 pub fn find_up<P: AsRef<Path>>(name: &str, options: FindUpOptions<P>) -> Vec<PathBuf> {
@@ -45,7 +50,7 @@ fn find_up_multi<P: AsRef<Path>>(
   find_up_with_impl(
     options.cwd.as_ref().to_path_buf(),
     names,
-    |path| FindUpResult::Saved(path),
+    FindUpResult::Saved,
     options.kind,
   )
 }
@@ -116,13 +121,12 @@ mod tests {
 
   #[test]
   fn should_find_files_when_searching_upward() {
-    let paths = find_up(
-      "package.json",
-      FindUpOptions {
-        cwd: "fixtures/a/b/c/d",
-        kind: FindUpKind::File,
-      },
-    );
+    let opts = FindUpOptions::builder()
+      .cwd("fixtures/a/b/c/d")
+      .kind(FindUpKind::File)
+      .build();
+
+    let paths = find_up("package.json", opts);
 
     assert_eq!(paths.len(), 4);
 
@@ -134,13 +138,12 @@ mod tests {
     let package_json_name = "package.json";
     let node_version_name = ".node-version";
 
-    let paths = find_up_multi(
-      &[package_json_name, node_version_name],
-      FindUpOptions {
-        cwd: "fixtures/a/b/c/d",
-        kind: FindUpKind::File,
-      },
-    );
+    let opts = FindUpOptions::builder()
+      .cwd("fixtures/a/b/c/d")
+      .kind(FindUpKind::File)
+      .build();
+
+    let paths = find_up_multi(&[package_json_name, node_version_name], opts);
 
     println!("{:#?}", paths);
 
@@ -162,13 +165,12 @@ mod tests {
     let package_json_name = "package.json";
     let node_version_name = ".node-version";
 
-    let paths = find_up_multi(
-      &[package_json_name, node_version_name],
-      FindUpOptions {
-        cwd: "fixtures/a/b/c/d",
-        kind: FindUpKind::Dir,
-      },
-    );
+    let opts = FindUpOptions::builder()
+      .cwd("fixtures/a/b/c/d")
+      .kind(FindUpKind::Dir)
+      .build();
+
+    let paths = find_up_multi(&[package_json_name, node_version_name], opts);
 
     println!("{:#?}", paths);
 
@@ -189,13 +191,12 @@ mod tests {
   fn should_find_directory_in_parent_path() {
     let dir_name = "a";
 
-    let paths = find_up_multi(
-      &[dir_name],
-      FindUpOptions {
-        cwd: "fixtures/a/b/c/d",
-        kind: FindUpKind::Dir,
-      },
-    );
+    let opts = FindUpOptions::builder()
+      .cwd("fixtures/a/b/c/d")
+      .kind(FindUpKind::Dir)
+      .build();
+
+    let paths = find_up_multi(&[dir_name], opts);
 
     println!("{:#?}", paths);
 

@@ -23,6 +23,10 @@ lint:
     cargo clippy    
     @echo '✅ Lint complete!'
 
+test:
+    cargo test
+    @echo '✅ Test complete!'
+
 review:
     cargo insta review
     @echo '✅ Review complete!'
