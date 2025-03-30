@@ -141,12 +141,12 @@ mod tests {
 
   #[test]
   fn should_find_files_when_searching_upward() {
-    let find_up = UpFinder::builder()
+    let up_finder = UpFinder::builder()
       .cwd("fixtures/a/b/c/d")
       .kind(FindUpKind::File)
       .build();
 
-    let paths = find_up.find_up("package.json");
+    let paths = up_finder.find_up("package.json");
 
     assert_eq!(paths.len(), 4);
 
@@ -158,12 +158,12 @@ mod tests {
     let package_json_name = "package.json";
     let node_version_name = ".node-version";
 
-    let find_up = UpFinder::builder()
+    let up_finder = UpFinder::builder()
       .cwd("fixtures/a/b/c/d")
       .kind(FindUpKind::File)
       .build();
 
-    let paths = find_up.find_up_multi(&[package_json_name, node_version_name]);
+    let paths = up_finder.find_up_multi(&[package_json_name, node_version_name]);
 
     println!("{:#?}", paths);
 
@@ -185,12 +185,12 @@ mod tests {
     let package_json_name = "package.json";
     let node_version_name = ".node-version";
 
-    let find_up = UpFinder::builder()
+    let up_finder = UpFinder::builder()
       .cwd("fixtures/a/b/c/d")
       .kind(FindUpKind::Dir)
       .build();
 
-    let paths = find_up.find_up_multi(&[package_json_name, node_version_name]);
+    let paths = up_finder.find_up_multi(&[package_json_name, node_version_name]);
 
     println!("{:#?}", paths);
 
@@ -211,12 +211,12 @@ mod tests {
   fn should_find_directory_in_parent_path() {
     let dir_name = "a";
 
-    let find_up = UpFinder::builder()
+    let up_finder = UpFinder::builder()
       .cwd("fixtures/a/b/c/d")
       .kind(FindUpKind::Dir)
       .build();
 
-    let paths = find_up.find_up_multi(&[dir_name]);
+    let paths = up_finder.find_up_multi(&[dir_name]);
 
     println!("{:#?}", paths);
 
