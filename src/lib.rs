@@ -21,6 +21,8 @@ pub struct FindUpOptions<P: AsRef<Path>> {
   pub kind: FindUpKind,
 }
 
+impl<P: AsRef<Path>> FindUpOptions<P> {}
+
 /// Find a file or directory upward in the directory tree.
 ///
 /// # Examples
