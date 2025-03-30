@@ -8,7 +8,7 @@ pub enum FindUpKind {
 }
 
 pub enum FindUpResult {
-  Found(PathBuf),
+  Saved(PathBuf),
   Continue,
   Stop,
 }
@@ -42,35 +42,22 @@ fn find_up_multi<P: AsRef<Path>>(
   names: &[&str],
   options: FindUpOptions<P>,
 ) -> FxHashMap<String, Vec<PathBuf>> {
-  find_up_with(
+  find_up_with_impl(
     options.cwd.as_ref().to_path_buf(),
     names,
-    move |p, kind| {
-      if !p.exists() {
-        return FindUpResult::Continue;
-      }
-
-      let file_matched = matches!(kind, FindUpKind::File) && p.is_file();
-      let dir_matched = matches!(kind, FindUpKind::Dir) && p.is_dir();
-
-      if !(file_matched || dir_matched) {
-        return FindUpResult::Continue;
-      }
-
-      FindUpResult::Found(p)
-    },
+    |path| FindUpResult::Saved(path),
     options.kind,
   )
 }
 
-fn find_up_with<F>(
+fn find_up_with_impl<F>(
   cwd: PathBuf,
   names: &[&str],
-  f: F,
+  matcher: F,
   find_kind: FindUpKind,
 ) -> FxHashMap<String, Vec<PathBuf>>
 where
-  F: Fn(PathBuf, &FindUpKind) -> FindUpResult,
+  F: Fn(PathBuf) -> FindUpResult,
 {
   let mut paths: FxHashMap<&str, Vec<PathBuf>> = FxHashMap::default();
 
@@ -82,9 +69,22 @@ where
 
       let file = cwd.join(name);
 
-      match f(file, &find_kind) {
-        FindUpResult::Found(path_buf) => {
-          vecs.push(path_buf);
+      if !file.exists() {
+        continue;
+      }
+
+      let matches_criteria = match find_kind {
+        FindUpKind::File => file.is_file(),
+        FindUpKind::Dir => file.is_dir(),
+      };
+
+      if !matches_criteria {
+        continue;
+      }
+
+      match matcher(file) {
+        FindUpResult::Saved(path) => {
+          vecs.push(path);
         }
         FindUpResult::Continue => {
           continue;
