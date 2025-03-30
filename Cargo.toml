@@ -2,14 +2,14 @@
 authors       = ["ityuany <519495771@qq.com>"]
 categories    = ["filesystem"]
 description   = "Find files or directories upward in the directory tree."
-documentation = "https://docs.rs/find_up"
+documentation = "https://docs.rs/up_finder"
 edition       = "2024"
-homepage      = "https://github.com/ityuany/find_up"
+homepage      = "https://github.com/ityuany/up_finder"
 include       = ["src/**/*.rs", "Cargo.toml", "LICENSE", "README.md"]
 keywords      = ["find", "search", "find_up"]
 license       = "MIT"
-name          = "find_up"
-repository    = "https://github.com/ityuany/find_up"
+name          = "up_finder"
+repository    = "https://github.com/ityuany/up_finder"
 version       = "0.0.1"
 
 [dependencies]
