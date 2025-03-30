@@ -1,0 +1,10 @@
+---
+source: src/lib.rs
+expression: paths
+---
+[
+    "fixtures/a/b/c/d/package.json",
+    "fixtures/a/b/c/package.json",
+    "fixtures/a/b/package.json",
+    "fixtures/a/package.json",
+]

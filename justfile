@@ -22,3 +22,11 @@ fmt:
 lint: 
     cargo clippy    
     @echo '✅ Lint complete!'
+
+review:
+    cargo insta review
+    @echo '✅ Review complete!'
+
+doc:
+    cargo doc --no-deps --open
+    @echo '✅ Doc complete!'

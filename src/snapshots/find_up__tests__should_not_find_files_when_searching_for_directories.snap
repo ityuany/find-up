@@ -1,0 +1,8 @@
+---
+source: src/lib.rs
+expression: paths
+---
+{
+    ".node-version": [],
+    "package.json": [],
+}

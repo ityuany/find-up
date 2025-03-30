@@ -1,0 +1,9 @@
+---
+source: src/lib.rs
+expression: paths
+---
+{
+    "a": [
+        "fixtures/a",
+    ],
+}
