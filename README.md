@@ -22,7 +22,7 @@ Add the following dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-up_finder = "0.0.1"
+up_finder = "0.0.2"
 ```
 
 ## Usage Examples
