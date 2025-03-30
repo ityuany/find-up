@@ -8,7 +8,7 @@ setup-bininstall:
     curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
 setup:
-    cargo binstall taplo-cli -y
+    cargo binstall taplo-cli cargo-release -y
     @echo '✅ Setup complete!'
 
 ready:
@@ -36,3 +36,17 @@ review:
 doc:
     cargo doc --no-deps --open
     @echo '✅ Doc complete!'
+
+release-patch:
+    cargo release patch --no-publish --execute
+    @echo '✅ Release patch complete!'
+
+release-minor:
+    cargo release minor --no-publish --execute
+    @echo '✅ Release minor complete!'
+
+release-major:
+    cargo release major --no-publish --execute
+    @echo '✅ Release major complete!'
+
+
