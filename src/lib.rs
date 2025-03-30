@@ -19,7 +19,7 @@ pub enum FindUpResult {
 /// # Example
 ///
 /// ```rust
-/// use find_up::{UpFinder, FindUpKind};
+/// use up_finder::{UpFinder, FindUpKind};
 ///
 /// let find_up = UpFinder::builder().cwd(".").kind(FindUpKind::File).build();
 /// let paths = find_up.find_up("package.json");
@@ -41,7 +41,7 @@ impl<P: AsRef<Path>> UpFinder<P> {
   /// # Example
   ///
   /// ```rust
-  /// use find_up::{UpFinder, FindUpKind};
+  /// use up_finder::{UpFinder, FindUpKind};
   ///
   /// let find_up = UpFinder::builder().cwd(".").kind(FindUpKind::File).build();
   /// let paths = find_up.find_up("package.json");
@@ -63,7 +63,7 @@ impl<P: AsRef<Path>> UpFinder<P> {
   /// # Example
   ///
   /// ```rust
-  /// use find_up::{UpFinder, FindUpKind};
+  /// use up_finder::{UpFinder, FindUpKind};
   ///
   /// let find_up = UpFinder::builder().cwd(".").kind(FindUpKind::File).build();
   /// let paths = find_up.find_up_multi(&["package.json", ".node-version"]);

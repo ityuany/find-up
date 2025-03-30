@@ -28,7 +28,7 @@ test:
     @echo '✅ Test complete!'
 
 review:
-    cargo insta review
+    cargo insta test --review
     @echo '✅ Review complete!'
 
 doc:
