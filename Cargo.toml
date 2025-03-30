@@ -10,7 +10,7 @@ keywords      = ["find", "search", "find_up"]
 license       = "MIT"
 name          = "up_finder"
 repository    = "https://github.com/ityuany/up_finder"
-version       = "0.0.2"
+version       = "0.0.3"
 
 [dependencies]
 rustc-hash    = { version = "2.1.1" }
