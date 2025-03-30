@@ -14,105 +14,123 @@ pub enum FindUpResult {
   Stop,
 }
 
-#[derive(Debug, PartialEq, TypedBuilder)]
-pub struct FindUpOptions<P: AsRef<Path>> {
-  pub cwd: P,
-  #[builder(default = FindUpKind::File)]
-  pub kind: FindUpKind,
-}
-
-impl<P: AsRef<Path>> FindUpOptions<P> {}
-
-/// Find a file or directory upward in the directory tree.
+/// A builder for the `find_up` function.
 ///
-/// # Examples
+/// # Example
 ///
 /// ```rust
-/// use find_up::{find_up, FindUpOptions, FindUpKind};
+/// use find_up::{UpFinder, FindUpKind};
 ///
-/// let opts = FindUpOptions::builder().cwd(".").kind(FindUpKind::File).build();
+/// let find_up = UpFinder::builder().cwd(".").kind(FindUpKind::File).build();
+/// let paths = find_up.find_up("package.json");
 ///
-/// let paths = find_up("package.json", opts);
-///
+/// println!("{:#?}", paths);
 /// ```
-pub fn find_up<P: AsRef<Path>>(name: &str, options: FindUpOptions<P>) -> Vec<PathBuf> {
-  let paths = find_up_multi(&[name], options);
+#[derive(Debug, PartialEq, TypedBuilder)]
+pub struct UpFinder<P: AsRef<Path>> {
+  /// The current working directory.
+  cwd: P,
+  /// The kind of file to search for.
+  #[builder(default = FindUpKind::File)]
+  kind: FindUpKind,
+}
 
-  if let Some(paths) = paths.get(name) {
-    paths.clone()
-  } else {
-    vec![]
+impl<P: AsRef<Path>> UpFinder<P> {
+  /// Find a file in the current working directory and all parent directories.
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use find_up::{UpFinder, FindUpKind};
+  ///
+  /// let find_up = UpFinder::builder().cwd(".").kind(FindUpKind::File).build();
+  /// let paths = find_up.find_up("package.json");
+  ///
+  /// println!("{:#?}", paths);
+  /// ```
+  pub fn find_up(&self, name: &str) -> Vec<PathBuf> {
+    let paths = self.find_up_multi(&[name]);
+
+    if let Some(paths) = paths.get(name) {
+      paths.clone()
+    } else {
+      vec![]
+    }
   }
-}
 
-fn find_up_multi<P: AsRef<Path>>(
-  names: &[&str],
-  options: FindUpOptions<P>,
-) -> FxHashMap<String, Vec<PathBuf>> {
-  find_up_with_impl(
-    options.cwd.as_ref().to_path_buf(),
-    names,
-    FindUpResult::Saved,
-    options.kind,
-  )
-}
+  /// Find multiple files in the current working directory and all parent directories.
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use find_up::{UpFinder, FindUpKind};
+  ///
+  /// let find_up = UpFinder::builder().cwd(".").kind(FindUpKind::File).build();
+  /// let paths = find_up.find_up_multi(&["package.json", ".node-version"]);
+  ///
+  /// println!("{:#?}", paths);
+  /// ```
+  pub fn find_up_multi(&self, names: &[&str]) -> FxHashMap<String, Vec<PathBuf>> {
+    self.find_up_with_impl(self.cwd.as_ref().to_path_buf(), names, FindUpResult::Saved)
+  }
 
-fn find_up_with_impl<F>(
-  cwd: PathBuf,
-  names: &[&str],
-  matcher: F,
-  find_kind: FindUpKind,
-) -> FxHashMap<String, Vec<PathBuf>>
-where
-  F: Fn(PathBuf) -> FindUpResult,
-{
-  let mut paths: FxHashMap<&str, Vec<PathBuf>> = FxHashMap::default();
+  fn find_up_with_impl<F>(
+    &self,
+    cwd: PathBuf,
+    names: &[&str],
+    matcher: F,
+  ) -> FxHashMap<String, Vec<PathBuf>>
+  where
+    F: Fn(PathBuf) -> FindUpResult,
+  {
+    let mut paths: FxHashMap<&str, Vec<PathBuf>> = FxHashMap::default();
 
-  let mut cwd = cwd;
+    let mut cwd = cwd;
 
-  loop {
-    for &name in names {
-      let vecs = paths.entry(name).or_default();
+    loop {
+      for &name in names {
+        let vecs = paths.entry(name).or_default();
 
-      let file = cwd.join(name);
+        let file = cwd.join(name);
 
-      if !file.exists() {
-        continue;
-      }
-
-      let matches_criteria = match find_kind {
-        FindUpKind::File => file.is_file(),
-        FindUpKind::Dir => file.is_dir(),
-      };
-
-      if !matches_criteria {
-        continue;
-      }
-
-      match matcher(file) {
-        FindUpResult::Saved(path) => {
-          vecs.push(path);
-        }
-        FindUpResult::Continue => {
+        if !file.exists() {
           continue;
         }
-        FindUpResult::Stop => {
-          break;
+
+        let matches_criteria = match self.kind {
+          FindUpKind::File => file.is_file(),
+          FindUpKind::Dir => file.is_dir(),
+        };
+
+        if !matches_criteria {
+          continue;
+        }
+
+        match matcher(file) {
+          FindUpResult::Saved(path) => {
+            vecs.push(path);
+          }
+          FindUpResult::Continue => {
+            continue;
+          }
+          FindUpResult::Stop => {
+            break;
+          }
         }
       }
+
+      let Some(parent) = cwd.parent() else {
+        break;
+      };
+
+      cwd = parent.to_path_buf();
     }
 
-    let Some(parent) = cwd.parent() else {
-      break;
-    };
-
-    cwd = parent.to_path_buf();
+    paths
+      .into_iter()
+      .map(|(name, paths)| (name.to_string(), paths))
+      .collect()
   }
-
-  paths
-    .into_iter()
-    .map(|(name, paths)| (name.to_string(), paths))
-    .collect()
 }
 
 #[cfg(test)]
@@ -123,12 +141,12 @@ mod tests {
 
   #[test]
   fn should_find_files_when_searching_upward() {
-    let opts = FindUpOptions::builder()
+    let find_up = UpFinder::builder()
       .cwd("fixtures/a/b/c/d")
       .kind(FindUpKind::File)
       .build();
 
-    let paths = find_up("package.json", opts);
+    let paths = find_up.find_up("package.json");
 
     assert_eq!(paths.len(), 4);
 
@@ -140,12 +158,12 @@ mod tests {
     let package_json_name = "package.json";
     let node_version_name = ".node-version";
 
-    let opts = FindUpOptions::builder()
+    let find_up = UpFinder::builder()
       .cwd("fixtures/a/b/c/d")
       .kind(FindUpKind::File)
       .build();
 
-    let paths = find_up_multi(&[package_json_name, node_version_name], opts);
+    let paths = find_up.find_up_multi(&[package_json_name, node_version_name]);
 
     println!("{:#?}", paths);
 
@@ -167,12 +185,12 @@ mod tests {
     let package_json_name = "package.json";
     let node_version_name = ".node-version";
 
-    let opts = FindUpOptions::builder()
+    let find_up = UpFinder::builder()
       .cwd("fixtures/a/b/c/d")
       .kind(FindUpKind::Dir)
       .build();
 
-    let paths = find_up_multi(&[package_json_name, node_version_name], opts);
+    let paths = find_up.find_up_multi(&[package_json_name, node_version_name]);
 
     println!("{:#?}", paths);
 
@@ -193,12 +211,12 @@ mod tests {
   fn should_find_directory_in_parent_path() {
     let dir_name = "a";
 
-    let opts = FindUpOptions::builder()
+    let find_up = UpFinder::builder()
       .cwd("fixtures/a/b/c/d")
       .kind(FindUpKind::Dir)
       .build();
 
-    let paths = find_up_multi(&[dir_name], opts);
+    let paths = find_up.find_up_multi(&[dir_name]);
 
     println!("{:#?}", paths);
 
